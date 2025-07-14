@@ -44,19 +44,19 @@ Executing
 ```
 $ spark
 ```
-in the terminal will print the help message and quit.<br><br>
+in the terminal will print the help message and quit.<br>
 
 Defining a new alias is easy, just run the following command:
 ```
 $ spark --create <name> <command>
 ```
-where `<name>` is the name you picked for your alias, and `<command>` is, as the name suggests, the command you want to be executed.<br><br>
+where `<name>` is the name you picked for your alias, and `<command>` is, as the name suggests, the command you want to be executed.<br>
 
 Executing an alias is really easy as well, just run:
 ```
 $ spark <name>
 ```
-where `<name>` is the name of the alias you want to execute. Simple as that.
+where `<name>` is the name of the alias you want to execute. Simple as that.<br>
 
 And as for removing an alias, it's analogous to creating one, but omitting the `<command>` parameter:
 ```
