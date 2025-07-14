@@ -1,5 +1,5 @@
 <p align="center">
-	<img src="assets/spark.png" width="512px">
+	<img src="assets/spark.svg" width="512px">
 </p>
 
 <p align="center">A lightweight Linux alias manager.</p>
