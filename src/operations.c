@@ -21,6 +21,7 @@ int create_alias(const char *name, const char *command)
 	FILE *fptr = fopen(get_file_path("alias"), "a");
 
 	int line_count = 0;
+	// int last_alias_id = 0;
 
 	char **file_buffer = read_file(get_file_path("alias"), &line_count);
 
@@ -52,7 +53,7 @@ int list_aliases()
 {
 	printf("\033[1mName\t\tCommand\033[0m\n");
 
-	int space_amount = 16;
+	// int space_amount = 16;
 
 	FILE *fptr = fopen(get_file_path("alias"), "r");
 

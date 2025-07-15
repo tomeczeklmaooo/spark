@@ -70,5 +70,8 @@ char **read_file(const char *filename, int *lines_read)
 
 int write_file(const char *filename, const char *content)
 {
+	// temporary so compiler doesn't cry about unused parameters
+	printf("%s %s", filename, content);
+
 	return SPARK_EXIT_SUCCESS;
 }
