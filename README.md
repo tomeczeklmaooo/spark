@@ -62,7 +62,13 @@ And as for removing an alias, it's analogous to creating one, but omitting the `
 ```
 $ spark --remove <name>
 ```
-where `<name>` is the name of the alias you want to remove.
+where `<name>` is the name of the alias you want to remove.<br>
+
+You can also list aliases in the order they were added in:
+```
+$ spark --list
+```
+Any subsequent arguments will be ignored.
 
 ## Maintainers
 

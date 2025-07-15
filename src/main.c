@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "include/operations.h"
 #include "include/exit_codes.h"
 
 int main(int argc, char *argv[])
@@ -42,8 +43,7 @@ int main(int argc, char *argv[])
 		char *alias_name = argv[2];
 		char *alias_command = argv[3];
 		
-		// for now only print out the params, but call function to create alias here
-		printf("alias to add: '%s' with command '%s'\n", alias_name, alias_command);
+		create_alias(alias_name, alias_command);
 	}
 	// REMOVE ALIAS
 	else if (!strcmp(argv[1], "--remove"))
@@ -56,14 +56,12 @@ int main(int argc, char *argv[])
 
 		char *alias_name = argv[2];
 		
-		// for now only print out the param, but call function to remove alias here
-		printf("alias to remove: '%s'\n", alias_name);
+		remove_alias(alias_name);
 	}
 	// LIST ALIASES
 	else if (!strcmp(argv[1], "--list"))
 	{
-		// call function to list aliases here
-		return SPARK_EXIT_SUCCESS;
+		list_aliases();
 	}
 	// OPTION NOT RECOGNIZED
 	else
