@@ -31,10 +31,10 @@ int main(int argc, char *argv[])
 			switch (argc)
 			{
 				case 2:
-					fprintf(stderr, "[\033[1;31merror\033[0m] Failed to create a new alias: missing arguments <name> and <command>\n");
+					fprintf(stderr, "[\033[1;31merror\033[0m] Failed to create a new alias: missing parameters <name> and <command>\n");
 					break;
 				case 3:
-					fprintf(stderr, "[\033[1;31merror\033[0m] Failed to create a new alias: missing argument <command>\n");
+					fprintf(stderr, "[\033[1;31merror\033[0m] Failed to create a new alias: missing parameter <command>\n");
 					break;
 			}
 			exit(SPARK_EXIT_INVALID_ARGUMENTS);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	{
 		if (argc < 3) // 3 args in total: spark --remove <name>
 		{
-			fprintf(stderr, "[\033[1;31merror\033[0m] Failed to remove alias: missing argument <name>\n");
+			fprintf(stderr, "[\033[1;31merror\033[0m] Failed to remove alias: missing parameter <name>\n");
 			exit(SPARK_EXIT_INVALID_ARGUMENTS);
 		}
 

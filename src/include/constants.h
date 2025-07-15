@@ -1,0 +1,7 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
+#define MAX_ALIAS_NAME_LENGTH 14
+#define MAX_FILE_LINE_LENGTH 255
+
+#endif /* CONSTANTS_H */
