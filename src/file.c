@@ -60,8 +60,6 @@ char **read_file(const char *filename, int *lines_read)
 		}
 	}
 
-	printf("line_count: %d | array_size: %d\n", line_count, array_size);
-
 	fclose(fptr);
 
 	*lines_read = line_count;

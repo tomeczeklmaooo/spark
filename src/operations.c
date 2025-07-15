@@ -8,6 +8,33 @@
 #include "include/exit_codes.h"
 #include "include/constants.h"
 
+static char *fold_json(char **src, int lines)
+{
+	size_t total_size = 0;
+
+	for (int i = 0; i < lines; i++)
+	{
+		total_size += strlen(src[i]);
+	}
+
+	char *json = malloc(total_size * sizeof(char) + 1);
+
+	if (json == NULL)
+	{
+		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to allocate memory\n");
+		exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
+	}
+
+	json[0] = '\0';
+
+	for (int i = 0; i < lines; i++)
+	{
+		strcat(json, src[i]);
+	}
+
+	return json;
+}
+
 int create_alias(const char *name, const char *command)
 {
 	printf("alias to add: '%s' with command '%s'\n", name, command);
@@ -53,7 +80,7 @@ int list_aliases()
 {
 	printf("\033[1mName\t\tCommand\033[0m\n");
 
-	// int space_amount = 16;
+	int space_amount = 16;
 
 	FILE *fptr = fopen(get_file_path("alias"), "r");
 
@@ -62,6 +89,58 @@ int list_aliases()
 		fprintf(stderr, "[\033[1;31merror\033[0m] File %s was not found\n", get_file_path("alias"));
 		exit(SPARK_EXIT_FILE_NOT_FOUND);
 	}
+
+	int line_count = 0;
+
+	char **file_buffer = read_file(get_file_path("alias"), &line_count);
+	
+	if (file_buffer == NULL)
+	{
+		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to read file\n");
+		exit(SPARK_EXIT_GENERAL_ERROR);
+	}
+
+	char *json_str = fold_json(file_buffer, line_count);
+	struct json json = json_parse(json_str);
+	struct json child = json_first(json);
+
+	int json_objects_length = 0;
+
+	while (json_exists(child))
+	{
+		child = json_next(child);
+		if (json_exists(child))
+			json_objects_length++;
+		child = json_next(child);
+	}
+
+	for (int i = 0; i < json_objects_length; i++)
+	{
+		char name_path[32] = "";
+		sprintf(name_path, "%d.name", i);
+		struct json value = json_get(json_str, name_path);
+		int alias_name_length = json_string_length(value) + 1;
+		char alias_name[alias_name_length];
+		json_string_copy(value, alias_name, sizeof(alias_name));
+
+		char command_path[32] = "";
+		sprintf(command_path, "%d.command", i);
+		value = json_get(json_str, command_path);
+		char alias_command[json_string_length(value) + 1];
+		json_string_copy(value, alias_command, sizeof(alias_command));
+
+		// this is so stupid, and sometimes adds some random letter in front of the command??????????
+		char spaces[space_amount - alias_name_length];
+		for (int i = 0; i <= (int)sizeof(spaces); i++)
+		{
+			spaces[i] = ' ';
+		}
+
+		printf("%s%s%s\n", alias_name, spaces, alias_command);
+	}
+
+	free(file_buffer);
+	free(json_str);
 	
 	fclose(fptr);
 
