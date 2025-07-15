@@ -51,6 +51,7 @@ Defining a new alias is easy, just run the following command:
 $ spark --create <name> <command>
 ```
 where `<name>` is the name you picked for your alias, and `<command>` is, as the name suggests, the command you want to be executed.<br>
+If your command contains spaces (and most likely will), wrap the command in quotations, like so: `"<command with spaces>"`<br>
 
 Executing an alias is really easy as well, just run:
 ```
