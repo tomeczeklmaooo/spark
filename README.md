@@ -26,7 +26,7 @@ As of now (the planning stage and early development), there are no dependencies 
 The dependencies necessary are already included in the source code.
 
 ### Installation / Building
-I'm not providing any executables or distro-specific packages, so you need to compile it yourself.<br><br>
+I'm not providing any executables or distro-specific packages, so you need to compile it yourself.<br>
 
 To compile, use the provided bash script:
 ```
