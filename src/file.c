@@ -10,11 +10,25 @@ char *get_file_path(const char *type)
 {
 	// this function will not look like this, just for development :)
 	if (!strcmp(type, "alias"))
-		return "test.json";
+		return "test3.json";
 	else if (!strcmp(type, "config"))
 		return "spark.conf";
 	else
 		return "";
+}
+
+bool file_exists(const char *filename)
+{
+	FILE *fptr = fopen(filename, "r");
+	bool file_exists = false;
+	
+	if (fptr != NULL)
+	{
+		fclose(fptr);
+		file_exists = true;
+	}
+
+	return file_exists;
 }
 
 char **read_file(const char *filename, int *lines_read)

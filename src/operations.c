@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "include/operations.h"
 #include "include/file.h"
@@ -44,11 +45,34 @@ int create_alias(const char *name, const char *command)
 		fprintf(stderr, "[\033[1;31merror\033[0m] Parameter <name> is too long! Make sure your alias name does not exceed %d characters\n", MAX_ALIAS_NAME_LENGTH);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
+	else if (strlen(command) > MAX_ALIAS_COMMAND_LENGTH)
+	{
+		fprintf(stderr, "[\033[1;31merror\033[0m] Parameter <command> is too long! Make sure your alias command does not exceed %d characters\n", MAX_ALIAS_COMMAND_LENGTH);
+		exit(SPARK_EXIT_GENERAL_ERROR);
+	}
+	else if (strlen(name) > MAX_ALIAS_NAME_LENGTH && strlen(command) > MAX_ALIAS_COMMAND_LENGTH)
+	{
+		fprintf(stderr, "[\033[1;31merror\033[0m] Parameters <name> and <command> are too long! Make sure the parameters do not exceed %d and %d characters respectively\n", MAX_ALIAS_NAME_LENGTH, MAX_ALIAS_COMMAND_LENGTH);
+		exit(SPARK_EXIT_GENERAL_ERROR);
+	}
 
 	// FILE *fptr = fopen(get_file_path("alias"), "w");
 
 	int line_count = 0;
 	// int last_alias_id = 0;
+
+	if (!file_exists(get_file_path("alias")))
+	{
+		printf("1\n");
+		char json_str_single[16384 * 16]; // arbitrary size because idk
+		printf("1\n");
+		sprintf(json_str_single, "{\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}\n", 0, name, command);
+		printf("1\n");
+		write_file(get_file_path("alias"), json_str_single, "w");
+		printf("1\n");
+
+		return SPARK_EXIT_SUCCESS;
+	}
 
 	char **file_buffer = read_file(get_file_path("alias"), &line_count);
 
