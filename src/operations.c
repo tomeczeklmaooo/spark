@@ -129,12 +129,13 @@ int list_aliases()
 		char alias_command[json_string_length(value) + 1];
 		json_string_copy(value, alias_command, sizeof(alias_command));
 
-		// this is so stupid, and sometimes adds some random letter in front of the command??????????
-		char spaces[space_amount - alias_name_length];
+		// this is so stupid but it works, memcpy might have been better here probably lol
+		char spaces[space_amount - alias_name_length + 1];
 		for (int i = 0; i <= (int)sizeof(spaces); i++)
 		{
 			spaces[i] = ' ';
 		}
+		spaces[sizeof(spaces)] = '\0';
 
 		printf("%s%s%s\n", alias_name, spaces, alias_command);
 	}
