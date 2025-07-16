@@ -66,10 +66,13 @@ char **read_file(const char *filename, int *lines_read)
 	return line_array;
 }
 
-int write_file(const char *filename, const char *content)
+int write_file(const char *filename, const char *content, const char* mode)
 {
-	// temporary so compiler doesn't cry about unused parameters
-	printf("%s %s", filename, content);
+	FILE *fptr = fopen(filename, mode);
+
+	fprintf(fptr, content);
+
+	fclose(fptr);
 
 	return SPARK_EXIT_SUCCESS;
 }

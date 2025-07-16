@@ -45,7 +45,7 @@ int create_alias(const char *name, const char *command)
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 
-	FILE *fptr = fopen(get_file_path("alias"), "a");
+	// FILE *fptr = fopen(get_file_path("alias"), "w");
 
 	int line_count = 0;
 	// int last_alias_id = 0;
@@ -57,15 +57,50 @@ int create_alias(const char *name, const char *command)
 		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to read file\n");
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
-	
-	for (int i = 0; i < line_count; i++)
+
+	char *json_str = fold_json(file_buffer, line_count);
+	struct json json = json_parse(json_str);
+	struct json child = json_first(json);
+
+	int json_objects_length = 0;
+
+	while (json_exists(child))
 	{
-		printf("%s", file_buffer[i]);
+		child = json_next(child);
+		if (json_exists(child))
+			json_objects_length++;
+		child = json_next(child);
 	}
+	
+	printf("json_objects_length: %d\n", json_objects_length);
+
+	// subtracting 3 because we removing }\n\0
+	int json_str_length = strlen(json_str) - 3;
+	json_str[json_str_length] = '\0';
+
+	// I should probably do size checks here
+	int new_json_str_length = json_str_length * 2;
+	char temp_buf[16384 * 16]; // arbitrary size because idk
+	sprintf(temp_buf, "%s,\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}\n", json_str, json_objects_length, name, command);
+	char *temp = realloc(json_str, new_json_str_length * sizeof(char));
+	if (temp == NULL)
+	{
+		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to allocate memory\n");
+		exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
+	}
+	json_str = temp;
+
+	// snprintf(json_str, new_json_str_length, "%s,\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}\n", json_str, json_objects_length, name, command);
+	snprintf(json_str, new_json_str_length, "%s", temp_buf);
+
+	printf("%s", json_str);
+
+	write_file(get_file_path("alias"), json_str, "w");
 
 	free(file_buffer);
+	free(json_str);
 
-	fclose(fptr);
+	// fclose(fptr);
 
 	return SPARK_EXIT_SUCCESS;
 }
