@@ -56,20 +56,14 @@ int create_alias(const char *name, const char *command)
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 
-	// FILE *fptr = fopen(get_file_path("alias"), "w");
-
 	int line_count = 0;
 	// int last_alias_id = 0;
 
 	if (!file_exists(get_file_path("alias")))
 	{
-		printf("1\n");
 		char json_str_single[16384 * 16]; // arbitrary size because idk
-		printf("1\n");
-		sprintf(json_str_single, "{\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}\n", 0, name, command);
-		printf("1\n");
+		sprintf(json_str_single, "{\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}", 0, name, command);
 		write_file(get_file_path("alias"), json_str_single, "w");
-		printf("1\n");
 
 		return SPARK_EXIT_SUCCESS;
 	}
@@ -98,33 +92,32 @@ int create_alias(const char *name, const char *command)
 	
 	printf("json_objects_length: %d\n", json_objects_length);
 
-	// subtracting 3 because we removing }\n\0
-	int json_str_length = strlen(json_str) - 3;
-	json_str[json_str_length] = '\0';
+	int json_str_length = strlen(json_str);
 
-	// I should probably do size checks here
-	int new_json_str_length = json_str_length * 2;
-	char temp_buf[16384 * 16]; // arbitrary size because idk
-	sprintf(temp_buf, "%s,\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}\n", json_str, json_objects_length, name, command);
-	char *temp = realloc(json_str, new_json_str_length * sizeof(char));
-	if (temp == NULL)
+	char *end = json_str + json_str_length - 1;
+
+	while (end > json_str && (*end == '\n' || *end == '\r' || *end == ' ' || *end == '\t'))
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to allocate memory\n");
-		exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
+		*--end = '\0';
 	}
-	json_str = temp;
 
-	// snprintf(json_str, new_json_str_length, "%s,\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}\n", json_str, json_objects_length, name, command);
-	snprintf(json_str, new_json_str_length, "%s", temp_buf);
+	if (*end != '}')
+	{
+		fprintf(stderr, "[\033[1;31merror\033[0m] Invalid JSON structure: missing closing brace\n");
+		exit(SPARK_EXIT_GENERAL_ERROR);
+	}
+	end--;
+	*end = '\0';
 
-	printf("%s", json_str);
+	strcat(json_str, ",\n");
 
-	write_file(get_file_path("alias"), json_str, "w");
+	char temp_buf[16384 * 16]; // arbitrary size because idk
+	snprintf(temp_buf, sizeof(temp_buf), "%s\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}", json_str, json_objects_length, name, command);
+
+	write_file(get_file_path("alias"), temp_buf, "w");
 
 	free(file_buffer);
 	free(json_str);
-
-	// fclose(fptr);
 
 	return SPARK_EXIT_SUCCESS;
 }
