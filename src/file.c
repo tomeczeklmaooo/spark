@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "include/file.h"
 #include "include/exit_codes.h"
@@ -8,13 +12,43 @@
 
 char *get_file_path(const char *type)
 {
-	// this function will not look like this, just for development :)
+	uid_t uid = getuid();
+	struct passwd *pw = getpwuid(uid);
+
+	if (pw == NULL)
+	{
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to fetch home directory\n"
+		);
+		exit(SPARK_EXIT_GENERAL_ERROR);
+	}
+
+	char *filename = malloc(256 * sizeof(char)); // arbitrary size for development purposes, will be dynamic later
+	
+	if (filename == NULL)
+	{
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to allocate memory\n"
+		);
+		exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
+	}
+
 	if (!strcmp(type, "alias"))
-		return "test.json";
+		sprintf(
+			filename,
+			"%s/.config/spark/aliases.json",
+			pw->pw_dir
+		);
 	else if (!strcmp(type, "config"))
-		return "spark.conf";
-	else
-		return "";
+		sprintf(
+			filename,
+			"%s/.config/spark/spark.conf",
+			pw->pw_dir
+		);
+	
+	return filename;
 }
 
 bool file_exists(const char *filename)
@@ -92,6 +126,32 @@ char **read_file(const char *filename, int *lines_read)
 
 int write_file(const char *filename, const char *content, const char* mode)
 {
+	uid_t uid = getuid();
+	struct passwd *pw = getpwuid(uid);
+
+	struct stat st;
+	char path[256];
+
+	snprintf(
+		path,
+		sizeof(path),
+		"%s/.config/spark",
+		pw->pw_dir
+	);
+
+	if (stat(path, &st) == -1)
+	{
+		if (mkdir(path, 0755) == -1)
+		{
+			fprintf(
+				stderr,
+				"[\033[1;31merror\033[0m] Failed to create directory '%s'\n",
+				path
+			);
+			exit(SPARK_EXIT_GENERAL_ERROR);
+		}
+	}
+
 	FILE *fptr = fopen(filename, mode);
 
 	fprintf(fptr, content);

@@ -41,6 +41,8 @@ static char *fold_json(char **src, int lines)
 
 int create_alias(const char *name, const char *command)
 {
+	char *alias_file_path = get_file_path("alias");
+
 	if (strlen(name) > MAX_ALIAS_NAME_LENGTH)
 	{
 		fprintf(
@@ -72,7 +74,7 @@ int create_alias(const char *name, const char *command)
 
 	int line_count = 0;
 
-	if (!file_exists(get_file_path("alias")))
+	if (!file_exists(alias_file_path))
 	{
 		char json_str_single[16384 * 16]; // arbitrary size because idk
 		sprintf(
@@ -82,12 +84,20 @@ int create_alias(const char *name, const char *command)
 			name,
 			command
 		);
-		write_file(get_file_path("alias"), json_str_single, "w");
+		write_file(alias_file_path, json_str_single, "w");
+
+		free(alias_file_path);
+
+		printf(
+			"Added command '%s' to alias list as '%s'\n",
+			command,
+			name
+		);
 
 		return SPARK_EXIT_SUCCESS;
 	}
 
-	char **file_buffer = read_file(get_file_path("alias"), &line_count);
+	char **file_buffer = read_file(alias_file_path, &line_count);
 
 	if (file_buffer == NULL)
 	{
@@ -145,10 +155,11 @@ int create_alias(const char *name, const char *command)
 		command
 	);
 
-	write_file(get_file_path("alias"), temp_buf, "w");
+	write_file(alias_file_path, temp_buf, "w");
 
 	free(file_buffer);
 	free(json_str);
+	free(alias_file_path);
 
 	printf(
 		"Added command '%s' to alias list as '%s'\n",
@@ -169,23 +180,24 @@ int list_aliases()
 {
 	printf("\033[1mName\t\tCommand\033[0m\n");
 
+	char *alias_file_path = get_file_path("alias");
 	int space_amount = 16;
 
-	FILE *fptr = fopen(get_file_path("alias"), "r");
+	FILE *fptr = fopen(alias_file_path, "r");
 
 	if (fptr == NULL)
 	{
 		fprintf(
 			stderr,
 			"[\033[1;31merror\033[0m] File %s was not found\n",
-			get_file_path("alias")
+			alias_file_path
 		);
 		exit(SPARK_EXIT_FILE_NOT_FOUND);
 	}
 
 	int line_count = 0;
 
-	char **file_buffer = read_file(get_file_path("alias"), &line_count);
+	char **file_buffer = read_file(alias_file_path, &line_count);
 	
 	if (file_buffer == NULL)
 	{
@@ -251,6 +263,7 @@ int list_aliases()
 
 	free(file_buffer);
 	free(json_str);
+	free(alias_file_path);
 	
 	fclose(fptr);
 
