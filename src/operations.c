@@ -22,7 +22,10 @@ static char *fold_json(char **src, int lines)
 
 	if (json == NULL)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to allocate memory\n");
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to allocate memory\n"
+		);
 		exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
 	}
 
@@ -38,31 +41,47 @@ static char *fold_json(char **src, int lines)
 
 int create_alias(const char *name, const char *command)
 {
-	printf("alias to add: '%s' with command '%s'\n", name, command);
-
 	if (strlen(name) > MAX_ALIAS_NAME_LENGTH)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Parameter <name> is too long! Make sure your alias name does not exceed %d characters\n", MAX_ALIAS_NAME_LENGTH);
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Parameter <name> is too long! Make sure your alias name does not exceed %d characters\n",
+			MAX_ALIAS_NAME_LENGTH
+		);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 	else if (strlen(command) > MAX_ALIAS_COMMAND_LENGTH)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Parameter <command> is too long! Make sure your alias command does not exceed %d characters\n", MAX_ALIAS_COMMAND_LENGTH);
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Parameter <command> is too long! Make sure your alias command does not exceed %d characters\n",
+			MAX_ALIAS_COMMAND_LENGTH
+		);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 	else if (strlen(name) > MAX_ALIAS_NAME_LENGTH && strlen(command) > MAX_ALIAS_COMMAND_LENGTH)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Parameters <name> and <command> are too long! Make sure the parameters do not exceed %d and %d characters respectively\n", MAX_ALIAS_NAME_LENGTH, MAX_ALIAS_COMMAND_LENGTH);
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Parameters <name> and <command> are too long! Make sure the parameters do not exceed %d and %d characters respectively\n",
+			MAX_ALIAS_NAME_LENGTH,
+			MAX_ALIAS_COMMAND_LENGTH
+		);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 
 	int line_count = 0;
-	// int last_alias_id = 0;
 
 	if (!file_exists(get_file_path("alias")))
 	{
 		char json_str_single[16384 * 16]; // arbitrary size because idk
-		sprintf(json_str_single, "{\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}", 0, name, command);
+		sprintf(
+			json_str_single,
+			"{\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}",
+			0,
+			name,
+			command
+		);
 		write_file(get_file_path("alias"), json_str_single, "w");
 
 		return SPARK_EXIT_SUCCESS;
@@ -72,7 +91,10 @@ int create_alias(const char *name, const char *command)
 
 	if (file_buffer == NULL)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to read file\n");
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to read file\n"
+		);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 
@@ -89,8 +111,6 @@ int create_alias(const char *name, const char *command)
 			json_objects_length++;
 		child = json_next(child);
 	}
-	
-	printf("json_objects_length: %d\n", json_objects_length);
 
 	int json_str_length = strlen(json_str);
 
@@ -103,7 +123,10 @@ int create_alias(const char *name, const char *command)
 
 	if (*end != '}')
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Invalid JSON structure: missing closing brace\n");
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Invalid JSON structure: missing closing brace\n"
+		);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 	end--;
@@ -112,12 +135,26 @@ int create_alias(const char *name, const char *command)
 	strcat(json_str, ",\n");
 
 	char temp_buf[16384 * 16]; // arbitrary size because idk
-	snprintf(temp_buf, sizeof(temp_buf), "%s\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}", json_str, json_objects_length, name, command);
+	snprintf(
+		temp_buf,
+		sizeof(temp_buf),
+		"%s\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}",
+		json_str,
+		json_objects_length,
+		name,
+		command
+	);
 
 	write_file(get_file_path("alias"), temp_buf, "w");
 
 	free(file_buffer);
 	free(json_str);
+
+	printf(
+		"Added command '%s' to alias list as '%s'\n",
+		command,
+		name
+	);
 
 	return SPARK_EXIT_SUCCESS;
 }
@@ -138,7 +175,11 @@ int list_aliases()
 
 	if (fptr == NULL)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] File %s was not found\n", get_file_path("alias"));
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] File %s was not found\n",
+			get_file_path("alias")
+		);
 		exit(SPARK_EXIT_FILE_NOT_FOUND);
 	}
 
@@ -148,7 +189,10 @@ int list_aliases()
 	
 	if (file_buffer == NULL)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to read file\n");
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to read file\n"
+		);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 
@@ -169,14 +213,22 @@ int list_aliases()
 	for (int i = 0; i < json_objects_length; i++)
 	{
 		char name_path[32] = "";
-		sprintf(name_path, "%d.name", i);
+		sprintf(
+			name_path,
+			"%d.name",
+			i
+		);
 		struct json value = json_get(json_str, name_path);
 		int alias_name_length = json_string_length(value) + 1;
 		char alias_name[alias_name_length];
 		json_string_copy(value, alias_name, sizeof(alias_name));
 
 		char command_path[32] = "";
-		sprintf(command_path, "%d.command", i);
+		sprintf(
+			command_path,
+			"%d.command",
+			i
+		);
 		value = json_get(json_str, command_path);
 		char alias_command[json_string_length(value) + 1];
 		json_string_copy(value, alias_command, sizeof(alias_command));
@@ -189,7 +241,12 @@ int list_aliases()
 		}
 		spaces[sizeof(spaces)] = '\0';
 
-		printf("%s%s%s\n", alias_name, spaces, alias_command);
+		printf(
+			"%s%s%s\n",
+			alias_name,
+			spaces,
+			alias_command
+		);
 	}
 
 	free(file_buffer);

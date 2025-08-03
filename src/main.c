@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
 		printf(" --> to create a new alias:\tspark --create <name> <command>\n");
 		printf(" --> to execute an alias:\tspark <name>\n");
 		printf(" --> to remove an alias:\tspark --remove <name>\n");
+		printf(" --> to list all aliases:\tspark --list\n");
 		return SPARK_EXIT_SUCCESS;
 	}
 
@@ -31,10 +32,16 @@ int main(int argc, char *argv[])
 			switch (argc)
 			{
 				case 2:
-					fprintf(stderr, "[\033[1;31merror\033[0m] Failed to create a new alias: missing parameters <name> and <command>\n");
+					fprintf(
+						stderr,
+						"[\033[1;31merror\033[0m] Failed to create a new alias: missing parameters <name> and <command>\n"
+					);
 					break;
 				case 3:
-					fprintf(stderr, "[\033[1;31merror\033[0m] Failed to create a new alias: missing parameter <command>\n");
+					fprintf(
+						stderr,
+						"[\033[1;31merror\033[0m] Failed to create a new alias: missing parameter <command>\n"
+					);
 					break;
 			}
 			exit(SPARK_EXIT_INVALID_ARGUMENTS);
@@ -50,7 +57,10 @@ int main(int argc, char *argv[])
 	{
 		if (argc < 3) // 3 args in total: spark --remove <name>
 		{
-			fprintf(stderr, "[\033[1;31merror\033[0m] Failed to remove alias: missing parameter <name>\n");
+			fprintf(
+				stderr,
+				"[\033[1;31merror\033[0m] Failed to remove alias: missing parameter <name>\n"
+			);
 			exit(SPARK_EXIT_INVALID_ARGUMENTS);
 		}
 
@@ -66,7 +76,10 @@ int main(int argc, char *argv[])
 	// OPTION NOT RECOGNIZED
 	else
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Unknown argument passed, exiting...\n");
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Unknown argument passed, exiting...\n"
+		);
 		exit(SPARK_EXIT_INVALID_ARGUMENTS);
 	}
 

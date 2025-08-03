@@ -10,7 +10,7 @@ char *get_file_path(const char *type)
 {
 	// this function will not look like this, just for development :)
 	if (!strcmp(type, "alias"))
-		return "test3.json";
+		return "test.json";
 	else if (!strcmp(type, "config"))
 		return "spark.conf";
 	else
@@ -39,7 +39,10 @@ char **read_file(const char *filename, int *lines_read)
 	char **line_array = malloc(array_size * sizeof(char*));
 	if (line_array == NULL)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] Failed to allocate memory\n");
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to allocate memory\n"
+		);
 		exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
 	}
 
@@ -47,7 +50,11 @@ char **read_file(const char *filename, int *lines_read)
 
 	if (fptr == NULL)
 	{
-		fprintf(stderr, "[\033[1;31merror\033[0m] File %s was not found\n", filename);
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] File %s was not found\n",
+			filename
+		);
 		exit(SPARK_EXIT_FILE_NOT_FOUND);
 	}
 
@@ -66,7 +73,10 @@ char **read_file(const char *filename, int *lines_read)
 
 			if (temp == NULL)
 			{
-				fprintf(stderr, "[\033[1;31merror\033[0m] Failed to reallocate memory\n");
+				fprintf(
+					stderr,
+					"[\033[1;31merror\033[0m] Failed to reallocate memory\n"
+				);
 				exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
 			}
 
