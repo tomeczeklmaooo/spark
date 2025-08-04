@@ -135,7 +135,7 @@ int create_alias(const char *name, const char *command)
 			stderr,
 			"[\033[1;31merror\033[0m] Failed to read file\n"
 		);
-		exit(SPARK_EXIT_GENERAL_ERROR);
+		exit(SPARK_EXIT_FILE_READ_FAILURE);
 	}
 
 	char *json_str = fold_json(file_buffer, line_count);
@@ -227,7 +227,7 @@ int list_aliases()
 			stderr,
 			"[\033[1;31merror\033[0m] Failed to read file\n"
 		);
-		exit(SPARK_EXIT_GENERAL_ERROR);
+		exit(SPARK_EXIT_FILE_READ_FAILURE);
 	}
 
 	char *json_str = fold_json(file_buffer, line_count);
