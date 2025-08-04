@@ -9,11 +9,11 @@
 #include "include/exit_codes.h"
 #include "include/constants.h"
 
-static char *fold_json(char **src, int lines)
+static char *fold_json(char **src, unsigned long lines)
 {
 	size_t total_size = 0;
 
-	for (int i = 0; i < lines; i++)
+	for (unsigned int i = 0; i < lines; i++)
 	{
 		total_size += strlen(src[i]);
 	}
@@ -31,7 +31,7 @@ static char *fold_json(char **src, int lines)
 
 	json[0] = '\0';
 
-	for (int i = 0; i < lines; i++)
+	for (unsigned int i = 0; i < lines; i++)
 	{
 		strcat(json, src[i]);
 	}
@@ -72,7 +72,7 @@ int create_alias(const char *name, const char *command)
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
 
-	int line_count = 0;
+	unsigned long line_count = 0;
 
 	if (!file_exists(alias_file_path))
 	{
@@ -122,7 +122,7 @@ int create_alias(const char *name, const char *command)
 		child = json_next(child);
 	}
 
-	int json_str_length = strlen(json_str);
+	unsigned long json_str_length = strlen(json_str);
 
 	char *end = json_str + json_str_length - 1;
 
@@ -181,7 +181,7 @@ int list_aliases()
 	printf("\033[1mName\t\tCommand\033[0m\n");
 
 	char *alias_file_path = get_file_path("alias");
-	int space_amount = 16;
+	unsigned long space_amount = 16;
 
 	FILE *fptr = fopen(alias_file_path, "r");
 
@@ -195,7 +195,7 @@ int list_aliases()
 		exit(SPARK_EXIT_FILE_NOT_FOUND);
 	}
 
-	int line_count = 0;
+	unsigned long line_count = 0;
 
 	char **file_buffer = read_file(alias_file_path, &line_count);
 	
@@ -231,7 +231,7 @@ int list_aliases()
 			i
 		);
 		struct json value = json_get(json_str, name_path);
-		int alias_name_length = json_string_length(value) + 1;
+		unsigned long alias_name_length = json_string_length(value) + 1;
 		char alias_name[alias_name_length];
 		json_string_copy(value, alias_name, sizeof(alias_name));
 
@@ -247,9 +247,10 @@ int list_aliases()
 
 		// this is so stupid but it works, memcpy might have been better here probably lol
 		char spaces[space_amount - alias_name_length + 1];
-		for (int i = 0; i <= (int)sizeof(spaces); i++)
+
+		for (size_t j = 0; j < sizeof(spaces); j++)
 		{
-			spaces[i] = ' ';
+			spaces[j] = ' ';
 		}
 		spaces[sizeof(spaces)] = '\0';
 

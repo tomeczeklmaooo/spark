@@ -330,11 +330,11 @@ static int64_t vpayload(const uint8_t *data, int64_t dlen, int64_t i) {
 JSON_EXTERN
 struct json_valid json_validn_ex(const char *json_str, size_t len, int opts) {
     (void)opts; // for future use
-    int64_t ilen = len;
+    int64_t ilen = (int64_t)len; // ADDED len CAST TO int64_t TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     if (ilen < 0) return (struct json_valid) { 0 };
-    int64_t pos = vpayload((uint8_t*)json_str, len, 0);
+    int64_t pos = vpayload((uint8_t*)json_str, (int64_t)len, 0); // ADDED len CAST TO int64_t TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     if (pos > 0) return (struct json_valid) { .valid = true };
-    return (struct json_valid) { .pos = (-pos)-1 };
+    return (struct json_valid) { .pos = (size_t)((-pos)-1) }; // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
 }
 
 JSON_EXTERN struct json_valid json_valid_ex(const char *json_str, int opts) {
@@ -367,7 +367,7 @@ static const uint8_t strtoksa[256] = {
 };
 
 static inline size_t count_string(uint8_t *raw, uint8_t *end, int *infoout) {
-    size_t len = end-raw;
+    size_t len = (size_t)(end-raw); // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     size_t i = 1;
     int info = 0;
     bool e = false;
@@ -430,7 +430,7 @@ static const uint8_t nesttoks[256] = {
 };
 
 static size_t count_nested(uint8_t *raw, uint8_t *end) {
-    size_t len = end-raw;
+    size_t len = (size_t)(end-raw); // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     size_t i = 1;
     int depth = 1;
     int kind = 0;
@@ -466,7 +466,7 @@ static size_t count_nested(uint8_t *raw, uint8_t *end) {
 }
 
 static struct json take_literal(uint8_t *raw, uint8_t *end, size_t litlen) {
-    size_t rlen = end-raw;
+    size_t rlen = (size_t)(end-raw); // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     return jmake(0, raw, end, rlen < litlen ? rlen : litlen);
 }
 
@@ -560,8 +560,8 @@ static const uint8_t hextoks[256] = {
 };
 
 static uint32_t decode_hex(const uint8_t *str) {
-    return (((int)hextoks[str[0]])<<12) | (((int)hextoks[str[1]])<<8) |
-           (((int)hextoks[str[2]])<<4) | (((int)hextoks[str[3]])<<0);
+    return (((unsigned int)hextoks[str[0]])<<12) | (((unsigned int)hextoks[str[1]])<<8) |
+           (((unsigned int)hextoks[str[2]])<<4) | (((unsigned int)hextoks[str[3]])<<0); // CHANGED int CAST TO unsigned int TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
 }
 
 static bool is_surrogate(uint32_t cp) {
@@ -576,22 +576,22 @@ static uint32_t decode_codepoint(uint32_t cp1, uint32_t cp2) {
 
 static inline int encode_codepoint(uint8_t dst[], uint32_t cp) {
     if (cp < 128) {
-        dst[0] = cp;
+        dst[0] = (uint8_t)cp; // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         return 1;
     } else if (cp < 2048) {
-        dst[0] = 192 | (cp >> 6);
+        dst[0] = (uint8_t)(192 | (cp >> 6)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         dst[1] = 128 | (cp & 63);
         return 2;
     } else if (cp > 1114111 || is_surrogate(cp)) {
         cp = 65533; // error codepoint
     }
     if (cp < 65536) {
-        dst[0] = 224 | (cp >> 12);
+        dst[0] = (uint8_t)(224 | (cp >> 12)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         dst[1] = 128 | ((cp >> 6) & 63);
         dst[2] = 128 | (cp & 63);
         return 3;
     }
-    dst[0] = 240 | (cp >> 18);
+    dst[0] = (uint8_t)(240 | (cp >> 18)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     dst[1] = 128 | ((cp >> 12) & 63);
     dst[2] = 128 | ((cp >> 6) & 63);
     dst[3] = 128 | (cp & 63);
@@ -727,7 +727,7 @@ JSON_EXTERN size_t json_string_copy(struct json json, char *str, size_t n) {
     }
     size_t count = 0;
     for_each_utf8(raw, len, {
-        if (count < n) str[count] = ch;
+        if (count < n) str[count] = (char)ch; // ADDED char CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         count++;
     });
     if (n > count) str[count] = '\0';
@@ -814,7 +814,7 @@ static int64_t parse_int64(const uint8_t *s, size_t len) {
 clamp:
     if (y < (double)INT64_MIN) return INT64_MIN;
     if (y > (double)INT64_MAX) return INT64_MAX;
-    return y;
+    return (int64_t)y; // ADDED int64_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
 }
 
 static uint64_t parse_uint64(const uint8_t *s, size_t len) {
@@ -836,7 +836,7 @@ static uint64_t parse_uint64(const uint8_t *s, size_t len) {
 clamp:
     if (y < 0) return 0;
     if (y > (double)UINT64_MAX) return UINT64_MAX;
-    return y;
+    return (uint64_t)y; // ADDED uint64_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
 }
 
 JSON_EXTERN double json_double(struct json json) {
@@ -871,7 +871,7 @@ JSON_EXTERN int json_int(struct json json) {
     int64_t x = json_int64(json);
     if (x < (int64_t)INT_MIN) return INT_MIN;
     if (x > (int64_t)INT_MAX) return INT_MAX;
-    return x;
+    return (int)x; // ADDED int CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
 }
 
 JSON_EXTERN uint64_t json_uint64(struct json json) {
@@ -939,7 +939,7 @@ size_t json_escapen(const char *str, size_t len, char *esc, size_t n) {
     struct jesc_buf buf  = { .esc = (uint8_t*)esc, .esclen = n };
     jesc_append(&buf, '"');
     for (size_t i = 0; i < len; i++) {
-        uint32_t c = (uint8_t)str[i];
+        uint16_t c = (uint8_t)str[i]; // uint32_t -> uint16_t TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         if (c < ' ') {
             switch (c) {
             case '\n': jesc_append2(&buf, '\\', 'n'); break;
@@ -957,7 +957,7 @@ size_t json_escapen(const char *str, size_t len, char *esc, size_t n) {
         } else if (c == '"') {
             jesc_append2(&buf, '\\', '"');
         } else if (c > 127) {
-            struct vutf8res res = vutf8((uint8_t*)(str+i), len-i);
+            struct vutf8res res = vutf8((uint8_t*)(str+i), (int64_t)(len-i)); // ADDED int64_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
             if (res.n == 0) {
                 res.n = 1;
                 res.cp = 0xfffd;
@@ -966,9 +966,9 @@ size_t json_escapen(const char *str, size_t len, char *esc, size_t n) {
             for (int j = 0; j < cpn; j++) {
                 jesc_append(&buf, cpbuf[j]);
             }
-            i = i + res.n - 1;
+            i = i + (size_t)res.n - 1; // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         } else {
-            jesc_append(&buf, str[i]);
+            jesc_append(&buf, (uint8_t)str[i]); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         }
     }
     jesc_append(&buf, '"');
@@ -989,22 +989,22 @@ struct json json_getn(const char *json_str, size_t len, const char *path) {
     if (!path) return (struct json) { 0 };
     struct json json = json_parsen(json_str, len);
     int i = 0;
-    bool end = false;
+    bool is_end = false; // end -> is_end TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     char *p = (char*)path;
-    for (; !end && json_exists(json); i++) {
+    for (; !is_end && json_exists(json); i++) {
         // get the next component
         const char *key = p;
         while (*p && *p != '.') p++;
-        size_t klen = p-key;
+        size_t klen = (size_t)(p-key); // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         if (*p == '.') p++;
-        else if (!*p) end = true;
+        else if (!*p) is_end = true;
         enum json_type type = json_type(json);
         if (type == JSON_OBJECT) {
             json = json_object_getn(json, key, klen);
         } else if (type == JSON_ARRAY) {
             if (klen == 0) { i = 0; break; }
             char *end;
-            size_t index = strtol(key, &end, 10);
+            size_t index = (size_t)strtol(key, &end, 10); // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
             if (*end && *end != '.') { i = 0; break; }
             json = json_array_get(json, index);
         } else {

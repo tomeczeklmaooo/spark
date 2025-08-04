@@ -65,10 +65,10 @@ bool file_exists(const char *filename)
 	return file_exists;
 }
 
-char **read_file(const char *filename, int *lines_read)
+char **read_file(const char *filename, unsigned long *lines_read)
 {
-	int line_count = 0;
-	int array_size = 16;
+	unsigned long line_count = 0;
+	unsigned long array_size = 16;
 
 	char **line_array = malloc(array_size * sizeof(char*));
 	if (line_array == NULL)
@@ -154,7 +154,7 @@ int write_file(const char *filename, const char *content, const char* mode)
 
 	FILE *fptr = fopen(filename, mode);
 
-	fprintf(fptr, content);
+	fprintf(fptr, "%s", content);
 
 	fclose(fptr);
 
