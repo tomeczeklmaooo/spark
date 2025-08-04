@@ -19,7 +19,7 @@ I know the code might not be of the highest quality, but you know, it's all a le
 ### Requirements
 
 - Operating system: Linux (might also work on Windows or macOS, but you're on your own there)
-- Compiler: gcc (or any other compiler with C99 support)
+- Compiler: clang (or any other compiler with C99 support)
 
 ### Dependencies
 As of now (the planning stage and early development), there are no dependencies you need to have installed to compile.<br>
