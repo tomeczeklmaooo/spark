@@ -36,11 +36,6 @@ static char *fold_json(char **src, unsigned long lines)
 		strcat(json, src[i]);
 	}
 
-	for (unsigned int i = 0; i < lines; i++)
-	{
-		free(src[i]);
-	}
-
 	return json;
 }
 
@@ -148,12 +143,16 @@ int create_alias(const char *name, const char *command)
 
 	write_file(alias_file_path, temp_buf, "w");
 
+	for (size_t i = 0; i < line_count; i++)
+	{
+		free(file_buffer[i]);
+	}
 	free(file_buffer);
 	free(json_str);
 	free(alias_file_path);
 
 	printf(
-		"Added command '%s' to alias list as '%s'\n",
+		"[\033[1;32msuccess\033[0m] Added command '%s' to alias list as '%s'\n",
 		command,
 		name
 	);
@@ -163,7 +162,74 @@ int create_alias(const char *name, const char *command)
 
 int remove_alias(const char *name)
 {
-	printf("alias to remove: '%s'\n", name);
+	char *alias_file_path = get_file_path("alias");
+
+	unsigned long line_count = 0;
+
+	if (!file_exists(alias_file_path))
+	{
+		printf("There is nothing to remove.\n");
+		return SPARK_EXIT_SUCCESS;
+	}
+
+	char **file_buffer = read_file(alias_file_path, &line_count);
+
+	if (file_buffer == NULL)
+	{
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to read file\n"
+		);
+		exit(SPARK_EXIT_FILE_READ_FAILURE);
+	}
+
+	char *json_str = fold_json(file_buffer, line_count);
+	struct json json = json_parse(json_str);
+
+	size_t json_objects_length = json_array_count(json);
+	size_t alias_index = 0;
+
+	for (size_t i = 0; i < json_objects_length; i++)
+	{
+		struct json json_obj = json_array_get(json, i);
+		struct json json_name = json_object_get(json_obj, "name");
+
+		if (json_string_compare(json_name, name)) continue;
+		alias_index = i + 1; // add 1 because line at i = 0 is a singluar opening square bracket
+		break;
+	}
+
+	if (alias_index != line_count)
+		file_buffer[alias_index - 1][strlen(file_buffer[alias_index])] = '\0'; // what
+
+	for (size_t i = alias_index; i < line_count - 1; i++)
+	{
+		file_buffer[i] = file_buffer[i + 1];
+	}
+
+	// this thing sucks and does not work as it should
+	// there are empty lines left in the file after deleting any alias that is not last
+	// TODO: fix
+	json_str = fold_json(file_buffer, line_count);
+	json_str[strlen(json_str) - 2] = '\n';
+	json_str[strlen(json_str) - 1] = ']';
+	json_str[strlen(json_str)] = '\0';
+
+	write_file(alias_file_path, json_str, "w");
+
+	for (size_t i = 0; i < line_count - 1; i++)
+	{
+		free(file_buffer[i]);
+	}
+	free(file_buffer);
+	free(json_str);
+	free(alias_file_path);
+
+	printf(
+		"[\033[1;32msuccess\033[0m] Removed alias '%s' from alias list\n",
+		name
+	);
+
 	return SPARK_EXIT_SUCCESS;
 }
 
@@ -237,6 +303,10 @@ int list_aliases()
 		);
 	}
 
+	for (size_t i = 0; i < line_count; i++)
+	{
+		free(file_buffer[i]);
+	}
 	free(file_buffer);
 	free(json_str);
 	free(alias_file_path);
