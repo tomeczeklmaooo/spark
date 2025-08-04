@@ -36,7 +36,37 @@ static char *fold_json(char **src, unsigned long lines)
 		strcat(json, src[i]);
 	}
 
+	for (unsigned int i = 0; i < lines; i++)
+	{
+		free(src[i]);
+	}
+
 	return json;
+}
+
+static int count_json_objects(const char *json_str)
+{
+	int length = 0;
+	struct json json = json_parse(json_str);
+	struct json child = json_first(json);
+
+	while (json_exists(child))
+	{
+		char path[32] = "";
+		sprintf(
+			path,
+			"%d.name",
+			length
+		);
+		struct json name_temp = json_get(json_str, path);
+
+		if (!json_exists(name_temp)) break;
+
+		length++;
+		child = json_next(child);
+	}
+
+	return length;
 }
 
 int create_alias(const char *name, const char *command)
@@ -109,18 +139,8 @@ int create_alias(const char *name, const char *command)
 	}
 
 	char *json_str = fold_json(file_buffer, line_count);
-	struct json json = json_parse(json_str);
-	struct json child = json_first(json);
 
-	int json_objects_length = 0;
-
-	while (json_exists(child))
-	{
-		child = json_next(child);
-		if (json_exists(child))
-			json_objects_length++;
-		child = json_next(child);
-	}
+	int json_objects_length = count_json_objects(json_str);
 
 	unsigned long json_str_length = strlen(json_str);
 
@@ -195,6 +215,8 @@ int list_aliases()
 		exit(SPARK_EXIT_FILE_NOT_FOUND);
 	}
 
+	fclose(fptr);
+
 	unsigned long line_count = 0;
 
 	char **file_buffer = read_file(alias_file_path, &line_count);
@@ -209,50 +231,44 @@ int list_aliases()
 	}
 
 	char *json_str = fold_json(file_buffer, line_count);
-	struct json json = json_parse(json_str);
-	struct json child = json_first(json);
 
-	int json_objects_length = 0;
-
-	while (json_exists(child))
-	{
-		child = json_next(child);
-		if (json_exists(child))
-			json_objects_length++;
-		child = json_next(child);
-	}
+	int json_objects_length = count_json_objects(json_str);
 
 	for (int i = 0; i < json_objects_length; i++)
 	{
 		char name_path[32] = "";
+		char command_path[32] = "";
+
 		sprintf(
 			name_path,
 			"%d.name",
 			i
 		);
-		struct json value = json_get(json_str, name_path);
-		unsigned long alias_name_length = json_string_length(value) + 1;
-		char alias_name[alias_name_length];
-		json_string_copy(value, alias_name, sizeof(alias_name));
 
-		char command_path[32] = "";
 		sprintf(
 			command_path,
 			"%d.command",
 			i
 		);
-		value = json_get(json_str, command_path);
-		char alias_command[json_string_length(value) + 1];
-		json_string_copy(value, alias_command, sizeof(alias_command));
 
-		// this is so stupid but it works, memcpy might have been better here probably lol
-		char spaces[space_amount - alias_name_length + 1];
+		struct json name = json_get(json_str, name_path);
+		struct json command = json_get(json_str, command_path);
 
-		for (size_t j = 0; j < sizeof(spaces); j++)
-		{
-			spaces[j] = ' ';
-		}
-		spaces[sizeof(spaces)] = '\0';
+		if (!json_exists(name) || !json_exists(command))
+			continue;
+		
+		char alias_name[json_string_length(name) + 1];
+		json_string_copy(name, alias_name, sizeof(alias_name));
+		
+		char alias_command[json_string_length(command) + 1];
+		json_string_copy(command, alias_command, sizeof(alias_command));
+
+		unsigned long alias_name_length = strlen(alias_name);
+		size_t space_padding_amount = space_amount > alias_name_length ? space_amount - alias_name_length : 1;
+
+		char spaces[space_padding_amount + 1];
+		memset(spaces, ' ', space_padding_amount);
+		spaces[space_padding_amount] = '\0';
 
 		printf(
 			"%s%s%s\n",
@@ -265,8 +281,6 @@ int list_aliases()
 	free(file_buffer);
 	free(json_str);
 	free(alias_file_path);
-	
-	fclose(fptr);
 
 	return SPARK_EXIT_SUCCESS;
 }

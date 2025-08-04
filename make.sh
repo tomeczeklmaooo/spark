@@ -4,6 +4,7 @@ if [ ! -d "bin" ]; then
 	mkdir bin
 fi
 
+# add -fsanitize=address,integer,undefined to check for memory leaks and undefined behavior and stuff
 clang src/*.c -o bin/spark \
 	-Wall -Wextra -Werror \
 	-Wshadow -Wpedantic -Wconversion -Wsign-conversion \

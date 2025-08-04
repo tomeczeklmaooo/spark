@@ -330,6 +330,7 @@ static int64_t vpayload(const uint8_t *data, int64_t dlen, int64_t i) {
 JSON_EXTERN
 struct json_valid json_validn_ex(const char *json_str, size_t len, int opts) {
     (void)opts; // for future use
+	if (len > INT64_MAX) return (struct json_valid) { 0 };
     int64_t ilen = (int64_t)len; // ADDED len CAST TO int64_t TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     if (ilen < 0) return (struct json_valid) { 0 };
     int64_t pos = vpayload((uint8_t*)json_str, (int64_t)len, 0); // ADDED len CAST TO int64_t TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
@@ -579,19 +580,19 @@ static inline int encode_codepoint(uint8_t dst[], uint32_t cp) {
         dst[0] = (uint8_t)cp; // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         return 1;
     } else if (cp < 2048) {
-        dst[0] = (uint8_t)(192 | (cp >> 6)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
+        dst[0] = (uint8_t)(192 | ((cp >> 6) & 0xFF)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         dst[1] = 128 | (cp & 63);
         return 2;
     } else if (cp > 1114111 || is_surrogate(cp)) {
         cp = 65533; // error codepoint
     }
     if (cp < 65536) {
-        dst[0] = (uint8_t)(224 | (cp >> 12)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
+        dst[0] = (uint8_t)(224 | ((cp >> 12) & 0xFF)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
         dst[1] = 128 | ((cp >> 6) & 63);
         dst[2] = 128 | (cp & 63);
         return 3;
     }
-    dst[0] = (uint8_t)(240 | (cp >> 18)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
+    dst[0] = (uint8_t)(240 | ((cp >> 18) & 0xFF)); // ADDED uint8_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
     dst[1] = 128 | ((cp >> 12) & 63);
     dst[2] = 128 | ((cp >> 6) & 63);
     dst[3] = 128 | (cp & 63);
@@ -721,7 +722,10 @@ JSON_EXTERN size_t json_string_copy(struct json json, char *str, size_t n) {
     if (!isesc) {
         if (n == 0) return len;
         n = n-1 < len ? n-1 : len;
-        memcpy(str, raw, n);
+        if (n > 0 && raw != NULL && str != NULL)
+		{
+			memcpy(str, raw, n);
+		}
         str[n] = '\0';
         return len;
     }
@@ -1004,7 +1008,9 @@ struct json json_getn(const char *json_str, size_t len, const char *path) {
         } else if (type == JSON_ARRAY) {
             if (klen == 0) { i = 0; break; }
             char *end;
-            size_t index = (size_t)strtol(key, &end, 10); // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
+			long raw_index = strtol(key, &end, 10);
+			if (raw_index < 0 || end == key || *end != '\0') return (struct json){0};
+            size_t index = (size_t)raw_index; // ADDED size_t CAST TO SHUT COMPILER UP, REMOVE/CHANGE WHEN THIS MESSES UP THE PROGRAM
             if (*end && *end != '.') { i = 0; break; }
             json = json_array_get(json, index);
         } else {
