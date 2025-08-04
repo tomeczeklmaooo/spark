@@ -44,31 +44,6 @@ static char *fold_json(char **src, unsigned long lines)
 	return json;
 }
 
-static int count_json_objects(const char *json_str)
-{
-	int length = 0;
-	struct json json = json_parse(json_str);
-	struct json child = json_first(json);
-
-	while (json_exists(child))
-	{
-		char path[32] = "";
-		sprintf(
-			path,
-			"%d.name",
-			length
-		);
-		struct json name_temp = json_get(json_str, path);
-
-		if (!json_exists(name_temp)) break;
-
-		length++;
-		child = json_next(child);
-	}
-
-	return length;
-}
-
 int create_alias(const char *name, const char *command)
 {
 	char *alias_file_path = get_file_path("alias");
@@ -109,8 +84,7 @@ int create_alias(const char *name, const char *command)
 		char json_str_single[16384 * 16]; // arbitrary size because idk
 		sprintf(
 			json_str_single,
-			"{\n\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}",
-			0,
+			"[\n\t{ \"name\": \"%s\", \"command\": \"%s\" }\n]",
 			name,
 			command
 		);
@@ -140,8 +114,6 @@ int create_alias(const char *name, const char *command)
 
 	char *json_str = fold_json(file_buffer, line_count);
 
-	int json_objects_length = count_json_objects(json_str);
-
 	unsigned long json_str_length = strlen(json_str);
 
 	char *end = json_str + json_str_length - 1;
@@ -151,11 +123,11 @@ int create_alias(const char *name, const char *command)
 		*--end = '\0';
 	}
 
-	if (*end != '}')
+	if (*end != ']')
 	{
 		fprintf(
 			stderr,
-			"[\033[1;31merror\033[0m] Invalid JSON structure: missing closing brace\n"
+			"[\033[1;31merror\033[0m] Invalid JSON structure: missing closing square bracket\n"
 		);
 		exit(SPARK_EXIT_GENERAL_ERROR);
 	}
@@ -168,9 +140,8 @@ int create_alias(const char *name, const char *command)
 	snprintf(
 		temp_buf,
 		sizeof(temp_buf),
-		"%s\t\"%d\": {\n\t\t\"name\": \"%s\",\n\t\t\"command\": \"%s\"\n\t}\n}",
+		"%s\t{ \"name\": \"%s\", \"command\": \"%s\" }\n]",
 		json_str,
-		json_objects_length,
 		name,
 		command
 	);
@@ -198,7 +169,7 @@ int remove_alias(const char *name)
 
 int list_aliases()
 {
-	printf("\033[1mName\t\tCommand\033[0m\n");
+	printf("\033[1mID\tName\t\tCommand\033[0m\n");
 
 	char *alias_file_path = get_file_path("alias");
 	unsigned long space_amount = 16;
@@ -231,28 +202,15 @@ int list_aliases()
 	}
 
 	char *json_str = fold_json(file_buffer, line_count);
+	struct json json = json_parse(json_str);
 
-	int json_objects_length = count_json_objects(json_str);
+	size_t json_objects_length = json_array_count(json);
 
-	for (int i = 0; i < json_objects_length; i++)
+	for (size_t i = 0; i < json_objects_length; i++)
 	{
-		char name_path[32] = "";
-		char command_path[32] = "";
-
-		sprintf(
-			name_path,
-			"%d.name",
-			i
-		);
-
-		sprintf(
-			command_path,
-			"%d.command",
-			i
-		);
-
-		struct json name = json_get(json_str, name_path);
-		struct json command = json_get(json_str, command_path);
+		struct json json_obj = json_array_get(json, i);
+		struct json name = json_object_get(json_obj, "name");
+		struct json command = json_object_get(json_obj, "command");
 
 		if (!json_exists(name) || !json_exists(command))
 			continue;
@@ -271,7 +229,8 @@ int list_aliases()
 		spaces[space_padding_amount] = '\0';
 
 		printf(
-			"%s%s%s\n",
+			"%zu\t%s%s%s\n",
+			i,
 			alias_name,
 			spaces,
 			alias_command
