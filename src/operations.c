@@ -199,28 +199,48 @@ int remove_alias(const char *name)
 		break;
 	}
 
-	if (alias_index != line_count)
-		file_buffer[alias_index - 1][strlen(file_buffer[alias_index])] = '\0'; // what
+	size_t total_size = 0;
 
-	for (size_t i = alias_index; i < line_count - 1; i++)
+	for (unsigned int i = 0; i < line_count; i++)
 	{
-		file_buffer[i] = file_buffer[i + 1];
+		total_size += strlen(file_buffer[i]);
 	}
 
-	// this thing sucks and does not work as it should
-	// there are empty lines left in the file after deleting any alias that is not last
-	// TODO: fix
-	json_str = fold_json(file_buffer, line_count);
-	json_str[strlen(json_str) - 2] = '\n';
-	json_str[strlen(json_str) - 1] = ']';
-	json_str[strlen(json_str)] = '\0';
+	char *buffer = malloc(total_size * sizeof(char) + 1);
 
-	write_file(alias_file_path, json_str, "w");
+	if (buffer == NULL)
+	{
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to allocate memory\n"
+		);
+		exit(SPARK_EXIT_MEMORY_ALLOCATION_ERROR);
+	}
+
+	buffer[0] = '\0';
+	bool is_last_alias = false;
+
+	for (unsigned int i = 0; i < line_count; i++)
+	{
+		if (alias_index == line_count - 2 && i == line_count - 2) is_last_alias = true;
+		if (i == alias_index) continue;
+		strcat(buffer, file_buffer[i]);
+	}
+
+	if (is_last_alias)
+	{
+		buffer[strlen(buffer) - 3] = '\n';
+		buffer[strlen(buffer) - 2] = ']';
+		buffer[strlen(buffer) - 1] = '\0';
+	}
+
+	write_file(alias_file_path, buffer, "w");
 
 	for (size_t i = 0; i < line_count - 1; i++)
 	{
 		free(file_buffer[i]);
 	}
+	free(buffer);
 	free(file_buffer);
 	free(json_str);
 	free(alias_file_path);
