@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
 	if (argc == 2 && strcmp(argv[1], "--list"))
 	{
-		// call function to run alias here
+		execute_alias(argv[1]);
 		return SPARK_EXIT_SUCCESS;
 	}
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "include/operations.h"
 #include "include/file.h"
@@ -37,6 +38,90 @@ static char *fold_json(char **src, unsigned long lines)
 	}
 
 	return json;
+}
+
+int execute_alias(const char *name)
+{
+	printf("[\033[1;34minfo\033[0m] Attempting to execute alias '%s'...\n", name);
+
+	char *alias_file_path = get_file_path("alias");
+
+	unsigned long line_count = 0;
+
+	if (!file_exists(alias_file_path))
+	{
+		printf("[\033[1;34minfo\033[0m] There is nothing to execute (file '%s' does not exist).\n", alias_file_path);
+		return SPARK_EXIT_SUCCESS;
+	}
+
+	char **file_buffer = read_file(alias_file_path, &line_count);
+
+	if (file_buffer == NULL)
+	{
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] Failed to read file\n"
+		);
+		exit(SPARK_EXIT_FILE_READ_FAILURE);
+	}
+
+	char *json_str = fold_json(file_buffer, line_count);
+	struct json json = json_parse(json_str);
+
+	size_t json_objects_length = json_array_count(json);
+	size_t alias_exit_code = 0;
+
+	char command_buf[MAX_ALIAS_COMMAND_LENGTH];
+
+	for (size_t i = 0; i < json_objects_length; i++)
+	{
+		struct json json_obj = json_array_get(json, i);
+		struct json json_name = json_object_get(json_obj, "name");
+		struct json json_command = json_object_get(json_obj, "command");
+
+		size_t len = json_string_copy(json_command, command_buf, sizeof(command_buf));
+		if (len > sizeof(command_buf) - 1)
+		{
+			fprintf(
+				stderr,
+				"[\033[1;31merror\033[0m] Failed to copy json string to C string buffer\n"
+			);
+			exit(SPARK_EXIT_GENERAL_ERROR);
+		}
+
+		if (!json_string_compare(json_name, name)) break;
+		command_buf[0] = '\0';
+	}
+
+	if (strlen(command_buf) == 0)
+	{
+		fprintf(
+			stderr,
+			"[\033[1;31merror\033[0m] There is no alias with name '%s'. Did you spell it correctly?\n",
+			name
+		);
+		exit(SPARK_EXIT_GENERAL_ERROR);
+	}
+
+	char *args[] = {"/bin/sh", "-c", command_buf, NULL};
+	execv(args[0], args);
+	
+	// leaving the rest here for now, clang sanitizer does not seem to care about it though
+	for (size_t i = 0; i < line_count; i++)
+	{
+		free(file_buffer[i]);
+	}
+	free(file_buffer);
+	free(json_str);
+	free(alias_file_path);
+
+	printf(
+		"[\033[1;32msuccess\033[0m] Executed alias '%s' (exited with code %zu)\n",
+		name,
+		alias_exit_code
+	);
+
+	return SPARK_EXIT_SUCCESS;
 }
 
 int create_alias(const char *name, const char *command)
@@ -168,7 +253,7 @@ int remove_alias(const char *name)
 
 	if (!file_exists(alias_file_path))
 	{
-		printf("There is nothing to remove.\n");
+		printf("[\033[1;34minfo\033[0m] There is nothing to remove.\n");
 		return SPARK_EXIT_SUCCESS;
 	}
 
