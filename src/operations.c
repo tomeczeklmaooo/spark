@@ -88,7 +88,7 @@ int create_alias(const char *name, const char *command)
 		free(alias_file_path);
 
 		printf(
-			"Added command '%s' to alias list as '%s'\n",
+			"[\033[1;32msuccess\033[0m] Added command '%s' to alias list as '%s'\n",
 			command,
 			name
 		);
@@ -234,9 +234,18 @@ int remove_alias(const char *name)
 		buffer[strlen(buffer) - 1] = '\0';
 	}
 
-	write_file(alias_file_path, buffer, "w");
+	if (json_objects_length != 1)
+	{
+		write_file(alias_file_path, buffer, "w");
+		goto success;
+	}
+	else
+	{
+		if (remove(alias_file_path) == 0) goto success;
+	}
 
-	for (size_t i = 0; i < line_count - 1; i++)
+success:
+	for (size_t i = 0; i < line_count; i++)
 	{
 		free(file_buffer[i]);
 	}
